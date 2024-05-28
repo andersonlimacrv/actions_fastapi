@@ -1,14 +1,25 @@
 [tool.poetry]
-name = "app"
+name = "Actions FastApi"
 version = "0.1.0"
 description = ""
 authors = ["Anderson_Carvalho <andersonlimacrv@gmail.com>"]
 readme = "README.md"
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 fastapi = "^0.111.0"
 
+
+pydantic = {extras = ["email"], version = "^2.7.1"}
+pyjwt = "^2.8.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+tzdata = "^2024.1"
+bcrypt = "4.0.1"
+python-multipart = "^0.0.9"
+pydantic-settings = "^2.2.1"
+[tool.poetry.group.dev.dependencies]
+taskipy = "^1.12.2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -16,3 +27,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 start = "app.main:start"
+
+[tool.taskipy.tasks]
+run = 'fastapi dev src/app/main.py --port 8888'
+requirements = 'poetry export -f requirements.txt --output requirements.txt --without-hashes'
+
+
