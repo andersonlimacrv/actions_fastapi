@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
-from datetime import datetime
+from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import List
+from enum import Enum
 
 
 class UserSchema(BaseModel):
@@ -12,15 +13,23 @@ class UserPublic(BaseModel):
     id: int
     username: str
     email: EmailStr
-
-
-class UserDB(UserSchema):
-    id: int
-    username: str
-    email: EmailStr
-    hashed_password: str
-    create_at: datetime = datetime.now()
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserList(BaseModel):
-    users: list[UserPublic]
+    users: List[UserPublic]
+
+
+class UserRoleEnum(str, Enum):
+    admin = "ADMIN"
+    user = "USER"
+    hardware = "HARDWARE"
+
+
+class UserDetail(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    role: UserRoleEnum
+    is_active: bool
+    model_config = ConfigDict(from_attributes=True)

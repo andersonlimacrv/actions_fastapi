@@ -1,44 +1,40 @@
 import uvicorn
-
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.app.core.db.database import database
-from src.app.routers import auth, root, users
-from src.app.schemas.user import UserDB
-from src.app.core.security import get_password_hash
+from src.app.api.main import api_router
 from src.app.core.config import settings
-
+from backend_pre_start import async_main
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(users.router)
-app.include_router(auth.router)
-app.include_router(root.router)
+app.include_router(api_router)
 
 
-def create_root_user():
-    user = UserDB(
-        id=settings.ROOT_ID,
-        username=settings.ROOT_USERNAME,
-        email=settings.ROOT_EMAIL,
-        hashed_password=get_password_hash(settings.ROOT_PASSWORD),
-        password=settings.ROOT_PASSWORD,
-    )
-    database.append(user)
+async def startup_event():
+    await async_main()
 
 
-create_root_user()
+app.add_event_handler("startup", startup_event)
 
 
 def start():
-    """Launched with 'poetry run start' at root level."""
+    """Iniciado com 'poetry run start' no nível raiz."""
     uvicorn.run("src.app.main:app", host="0.0.0.0", port=8888, reload=True)
+
+
+if __name__ == "__main__":
+    start()
