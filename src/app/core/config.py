@@ -12,11 +12,6 @@ class Settings(BaseSettings):
     ROOT_PASSWORD: str
     ROOT_EMAIL: EmailStr
     DATABASE_ACTIONS_URL: str
-    RENDER_DB_PASSWORD: str
-    RENDER_DB_HOST: str
-    RENDER_DB_USER: str
-    RENDER_DB_NAME: str
-    RENDER_DB_PORT: int
 
 
 settings = Settings()
