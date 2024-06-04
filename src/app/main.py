@@ -4,8 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.app.api.main import api_router
-from src.app.core.config import settings
-from backend_pre_start import async_main
+from src.app.backend_pre_start import async_main
 
 app = FastAPI()
 
