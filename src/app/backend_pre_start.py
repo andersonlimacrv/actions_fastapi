@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
 from tenacity import retry, stop_after_attempt, wait_fixed, before_log, after_log
 from src.app.core.database.db import async_get_db_session
-from logging_config import InterceptHandler
+from .logging_config import InterceptHandler
 from src.app.core.config import settings
 
 logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
@@ -44,7 +44,9 @@ async def create_admin_first_user() -> None:
         from src.app.schemas.user import UserRoleEnum
         from src.app.core.security import get_password_hash
 
-        result = await session.execute(select(User).where(User.username == UserRoleEnum.admin))
+        result = await session.execute(
+            select(User).where(User.username == UserRoleEnum.admin)
+        )
         admin_first_user = result.scalars().first()
         if not admin_first_user:
             admin_first_user = User(
