@@ -69,10 +69,7 @@ async def get_current_user(token: Token, db: db_session):
     except ExpiredSignatureError:
         raise credentials_exception
 
-    user = await db.scalar(select(User).where(User.email == token_data.username))
-
-    if user.role == UserRoleEnum.admin:
-        return user
+    user = await db.scalar(select(User).where(User.username == token_data.username))
 
     if user is None:
         raise credentials_exception

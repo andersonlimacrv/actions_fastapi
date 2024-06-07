@@ -12,11 +12,10 @@ class UserRepository:
         stmt = await self.session.get(User, user_id)
         return stmt
 
-    async def get_user_by_username_or_email(self, username: str, email: str) -> User:
-        stmt = await self.session.scalar(
-            select(User).where(or_(User.username == username, User.email == email))
-        )
-        return stmt
+    async def get_user_by_username(self, username: str) -> User:
+        stmt = select(User).where(User.username == username)
+        result = await self.session.scalars(stmt)
+        return result.first()
 
     async def add_user(self, user: User) -> User:
         self.session.add(user)

@@ -33,12 +33,12 @@ async def login_for_access_token(form_data: FormData, db: db_session):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password"
         )
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": user.username})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_acess_token(user: current_user):
-    new_access_token = create_access_token(data={"sub": user.email})
+    new_access_token = create_access_token(data={"sub": user.username})
     return {"access_token": new_access_token, "token_type": "Bearer"}
