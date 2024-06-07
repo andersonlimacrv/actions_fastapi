@@ -45,7 +45,7 @@ async def create_admin_first_user() -> None:
         from src.app.core.security import get_password_hash
 
         result = await session.execute(
-            select(User).where(User.username == UserRoleEnum.admin)
+            select(User).where(User.username == settings.ROOT_USERNAME)
         )
         admin_first_user = result.scalars().first()
         if not admin_first_user:

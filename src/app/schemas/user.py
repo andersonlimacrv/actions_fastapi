@@ -21,9 +21,9 @@ class UserList(BaseModel):
 
 
 class UserRoleEnum(str, Enum):
-    admin = "ADMIN"
-    user = "USER"
-    hardware = "HARDWARE"
+    admin = "admin"
+    user = "user"
+    hardware = "hardware"
 
 
 class UserDetail(BaseModel):

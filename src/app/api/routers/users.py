@@ -1,23 +1,19 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, Depends, status
 from typing import Annotated
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.app.core.security import get_current_user
+from src.app.core.database.db import async_get_db_session
+from src.app.models.user import User
 from src.app.schemas.message import Message
-from src.app.core.security import (
-    get_current_user,
-    get_password_hash,
-)
-
 from src.app.schemas.user import (
     UserSchema,
     UserPublic,
     UserList,
     UserDetail,
-    UserRoleEnum,
 )
-from src.app.models.user import User
-from src.app.core.database.db import async_get_db_session
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from src.app.services.users import UserService
+from src.app.repositories.users import UserRepository
 
 router = APIRouter(tags=["Users 💁🏻‍♂️"])
 
@@ -32,69 +28,32 @@ db_session = Annotated[AsyncSession, Depends(async_get_db_session)]
     summary="Create user",
 )
 async def create_user(user: UserSchema, db: db_session):
-    stmt = await db.scalar(
-        select(User).where(
-            or_(User.username == user.username, User.email == user.email)
-        )
-    )
+    user_repository = UserRepository(db)
+    user_service = UserService(user_repository)
+    return await user_service.create_user(user)
 
-    if stmt:
-        if stmt.username == user.username:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already exists",
-            )
-        elif stmt.email == user.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists"
-            )
 
-    new_user = User(
-        username=user.username,
-        email=user.email,
-        password=get_password_hash(user.password),
-    )
-    try:
-        db.add(new_user)
-        await db.commit()
-        await db.refresh(new_user)
-
-        return new_user
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating user: {e}")
+@router.put(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserPublic,
+    summary="Update user",
+)
+async def update_user(
+    user_id: int, user: UserSchema, db: db_session, current_user: CurrentUser
+):
+    user_repository = UserRepository(db)
+    user_service = UserService(user_repository)
+    return await user_service.update_user(user_id, user, current_user)
 
 
 @router.get(
     "", response_model=UserList, status_code=status.HTTP_200_OK, summary="Get all users"
 )
 async def read_users(db: db_session, current_user: CurrentUser):
-    stmt = select(User)
-    result = await db.scalars(stmt)
-    users = result.all()
-    return {"users": users}
-
-
-@router.put("/{user_id}", status_code=status.HTTP_200_OK, response_model=UserPublic)
-async def update_user(
-    user_id: int, user: UserSchema, db: db_session, current_user: CurrentUser
-):
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
-        )
-    current_user.username = user.username
-    current_user.password = get_password_hash(user.password)
-    current_user.email = user.email
-
-    try:
-        await db.commit()
-        await db.refresh(current_user)
-
-        return current_user
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error updating user: {e}")
+    user_repository = UserRepository(db)
+    user_service = UserService(user_repository)
+    return {"users": await user_service.get_all_users(current_user)}
 
 
 @router.get(
@@ -104,34 +63,9 @@ async def update_user(
     summary="Get user by id",
 )
 async def read_user(user_id: int, db: db_session, current_user: CurrentUser):
-    if current_user.role == UserRoleEnum.admin or current_user.id == user_id:
-        try:
-            stmt = select(User).where(User.id == user_id)
-            result = await db.scalars(stmt)
-            user = result.first()
-            if not user:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-                )
-
-            return user
-
-        except Exception as e:
-            if e.status_code == 404:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"User with user_id {user_id} not found",
-                )
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Error getting user with user_id  {user_id}: {e}",
-                )
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
-        )
+    user_repository = UserRepository(db)
+    user_service = UserService(user_repository)
+    return await user_service.get_user_by_id(user_id, current_user)
 
 
 @router.delete(
@@ -141,19 +75,6 @@ async def read_user(user_id: int, db: db_session, current_user: CurrentUser):
     summary="Delete user",
 )
 async def delete_user(user_id: int, db: db_session, current_user: CurrentUser):
-
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
-        )
-
-    try:
-        await db.delete(current_user)
-        await db.commit()
-        return {"message": f"User {user_id} deleted successfully"}
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deleting user{user_id}: {e}",
-        )
+    user_repository = UserRepository(db)
+    user_service = UserService(user_repository)
+    return await user_service.delete_user(user_id, current_user)
