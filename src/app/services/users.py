@@ -4,7 +4,8 @@ from src.app.models.user import User
 from src.app.schemas.user import UserSchema, UserRoleEnum
 from src.app.schemas.message import Message
 from src.app.repositories.users import UserRepository
-from .exceptions.messages import Except
+from src.app.exceptions.messages import Except
+from src.app.exceptions.exceptions import UsernameAlreadyExists
 
 
 class UserService:
@@ -41,9 +42,8 @@ class UserService:
 
         if existing_user:
             if existing_user.username == user_data.username:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    deatil=Except.bad_request_400("Username"),
+                raise UsernameAlreadyExists(
+                    message=Except.bad_request_400(f"Username {user_data.username}")
                 )
 
         new_user = User(
