@@ -10,6 +10,8 @@ from alembic import context
 from src.app.core.config import settings
 from src.app.core.database.db import Base
 from src.app.models.user import User
+from src.app.models.organization import Grupo, Empresa, Unidade
+from src.app.models.regime import Regime
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

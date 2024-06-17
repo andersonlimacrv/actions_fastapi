@@ -61,7 +61,6 @@ class UserService:
         self, user_id: int, user_data: UserSchema, current_user: User
     ) -> User:
         await self._is_owner_or_admin(user_id, current_user)
-
         user = await self._get_user_or_404(user_id)
 
         already_username_exists = await self.user_repository.get_user_by_username(

@@ -31,10 +31,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "app.main:start"
+start = "src.app.main:start"
 
 [tool.taskipy.tasks]
 run = 'fastapi dev src/app/main.py --port 8888'
-requirements = 'poetry export -f requirements.txt --output requirements.txt --without-hashes'
+require = 'poetry export -f requirements.txt --output requirements.txt --without-hashes'
 
 

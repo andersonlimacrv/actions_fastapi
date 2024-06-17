@@ -6,7 +6,7 @@ from src.app.exceptions.exceptions import (
     UsernameAlreadyExists,
     create_exception_handler,
 )
-from src.app.api.main import api_router
+from src.app.api.v1 import api_router
 from src.app.backend_pre_start import async_main
 
 app = FastAPI()
