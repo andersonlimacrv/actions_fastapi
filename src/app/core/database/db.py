@@ -1,13 +1,9 @@
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
-from src.app.core.config import settings
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSession
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, MappedAsDataclass
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    create_async_engine,
-)
-from sqlalchemy.orm import DeclarativeBase, sessionmaker, MappedAsDataclass
+from src.app.core.config import settings
 from typing import AsyncGenerator
+import asyncio
 
 
 class Base(MappedAsDataclass, DeclarativeBase): ...
@@ -15,6 +11,7 @@ class Base(MappedAsDataclass, DeclarativeBase): ...
 
 db_url = make_url(settings.DATABASE_ACTIONS_URL)
 async_engine = create_async_engine(db_url, echo=True, echo_pool=False)
+
 local_session = sessionmaker(
     bind=async_engine,
     class_=AsyncSession,
@@ -23,8 +20,29 @@ local_session = sessionmaker(
     future=True,
 )
 
+print("DB_URL:", async_engine.url)
+
 
 async def async_get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async_session = local_session
     async with async_session() as db_session:
         yield db_session
+
+
+# Função para criar todas as tabelas
+async def create_all_tables(engine: AsyncEngine):
+    async with engine.begin() as conn:
+        from src.app.models.user import User
+        from src.app.models.regime import Regime
+        from src.app.models.organization import Empresa, Grupo
+
+        await conn.run_sync(Base.metadata.create_all)
+
+
+# Função principal para rodar a criação das tabelas
+async def main():
+    await create_all_tables(async_engine)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -10,7 +10,7 @@ from src.app.core.config import settings
 logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-max_tries = 60 * 1  # 1 minutes
+max_tries = 10 * 1  # 1 minutes
 wait_seconds = 1
 
 
