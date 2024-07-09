@@ -10,7 +10,16 @@ class Base(MappedAsDataclass, DeclarativeBase): ...
 
 
 db_url = make_url(settings.DATABASE_ACTIONS_URL)
-async_engine = create_async_engine(db_url, echo=True, echo_pool=False)
+async_engine = create_async_engine(
+    db_url,
+    echo=True,
+    echo_pool=False,
+    pool_size=10,  # Tamanho do pool de conexões
+    max_overflow=20,  # Conexões adicionais além do pool_size
+    pool_timeout=30,  # Tempo de espera por uma conexão do pool (em segundos)
+    pool_recycle=1800,  # Tempo para reciclar uma conexão (em segundos)
+    pool_pre_ping=True,  # Habilita ping antes de usar a conexão do pool
+)
 
 local_session = sessionmaker(
     bind=async_engine,
