@@ -28,12 +28,13 @@ async def login_for_access_token(form_data: FormData, db: db_session):
     user = await UserRepository(db).get_user_by_username(username=form_data.username)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="This username does not exist.",
         )
 
     if not verify_password(form_data.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password."
         )
 
     access_token = create_access_token(data={"sub": user.username})

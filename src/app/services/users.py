@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from src.app.core.security import get_password_hash
+from src.app.core.config import settings
 from src.app.models.user import User
 from src.app.schemas.user import UserSchema, UserRoleEnum
 from src.app.schemas.message import Message
@@ -84,6 +85,22 @@ class UserService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=Except.error_updating_user(e))
 
+    async def activate_or_deactivate_user(
+        self, user_id: int, current_user: User
+    ) -> User:
+        await self._is_admin(current_user)
+        user = await self._get_user_or_404(user_id)
+        if user.username == settings.ROOT_USERNAME:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=Except.not_allowed_403(),
+            )
+        user.is_active = not user.is_active
+        try:
+            return await self.user_repository.update_user(user)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=Except.error_updating_user(e))
+
     async def get_all_users(self, current_user: User) -> list[User]:
         await self._is_admin(current_user)
         try:
@@ -96,9 +113,13 @@ class UserService:
         return await self._get_user_or_404(user_id)
 
     async def delete_user(self, user_id: int, current_user: User) -> Message:
-        await self._get_user_or_404(user_id)
+        user = await self._get_user_or_404(user_id)
         await self._is_owner_or_admin(user_id, current_user)
-
+        if user.username == settings.ROOT_USERNAME:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=Except.not_allowed_403(),
+            )
         try:
             await self.user_repository.delete_user(user_id)
             return Message(message=f"User {user_id} deleted successfully")

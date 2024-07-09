@@ -9,6 +9,7 @@ from src.app.schemas.message import Message
 from src.app.schemas.user import (
     UserSchema,
     UserPublic,
+    UserAllow,
     UserList,
     UserDetail,
 )
@@ -43,6 +44,19 @@ async def update_user(
 ):
     user_to_update = UserService(UserRepository(db))
     return await user_to_update.update_user(user_id, user, current_user)
+
+
+@router.put(
+    "/{user_id}/allow",
+    status_code=status.HTTP_200_OK,
+    response_model=UserAllow,
+    summary="Activate or deactivate user",
+)
+async def activate_or_deactivate_user(
+    user_id: int, db: db_session, current_user: CurrentUser
+):
+    user_to_activate = UserService(UserRepository(db))
+    return await user_to_activate.activate_or_deactivate_user(user_id, current_user)
 
 
 @router.get(
