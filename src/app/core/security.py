@@ -114,3 +114,39 @@ async def get_current_user(token: Token, db: db_session):
         raise credentials_exception
 
     return user
+
+async def get_current_user_ws(token: str, db: db_session):
+    try: 
+        payload = decode(
+            token, settings.SECRET_KEY_HASH, algorithms=[settings.ALGORITHM]
+        )
+        user_id: str = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido: não foi encontrado o 'sub' no payload"
+            )
+        token_data = TokenData(username=user_id)
+
+    except DecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Erro ao decodificar o token: Token inválido"
+        )
+    
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expirado"
+        )
+
+    user = await db.scalar(select(User).where(User.username == token_data.username))
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado"
+        )
+
+    return user
+

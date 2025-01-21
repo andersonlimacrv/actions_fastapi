@@ -8,6 +8,8 @@ from src.app.exceptions.exceptions import (
 )
 from src.app.api.v1 import api_router
 from src.app.backend_pre_start import async_main
+from src.app.websocket.websocket import ws_router
+
 
 app = FastAPI()
 
@@ -21,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(ws_router)
 
 
 async def startup_event():
